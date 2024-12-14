@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, TextInput, ImageBackground } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, TextInput, ImageBackground, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard } from 'react-native';
 
 const Start = ({ navigation }) => {
   // State hooks to store the user's name and selected background color
@@ -15,45 +15,52 @@ const Start = ({ navigation }) => {
       source={require('../assets/BackgroundImage.png')}  // Directly require the image for background
       style={styles.backgroundImage}  // Style for ImageBackground to cover the screen
     >
+      {/* Wrap everything in KeyboardAvoidingView to adjust layout when keyboard is shown */}
+      <KeyboardAvoidingView
+        style={[styles.container, bgColor && { backgroundColor: bgColor }]}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}  // Set behavior based on the platform
+      >
+        {/* Main container for the content */}
+        <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
+          {/* Dismissing the keyboard when tapping outside the input field */}
+          <View style={styles.innerContainer}>
+            {/* App Title Text */}
+            <Text style={styles.appTitle}>App Title</Text>
 
-      {/* Main container for the content */}
-      <View style={[styles.container, bgColor && { backgroundColor: bgColor }]}>
-        
-        {/* App Title Text */}
-        <Text style={styles.appTitle}>App Title</Text>
-
-        {/* TextInput component for entering the user's name */}
-        <TextInput
-          style={styles.textInput}  // Styling for the input field
-          value={name}  // The state value that holds the input text
-          onChangeText={setName}  // Function to update the name state as the user types
-          placeholder="Your name"  // Placeholder text for the input field
-          placeholderTextColor="rgba(117, 112, 131, 0.5)"  // Color of the placeholder text
-        />
-
-        {/* Text prompt asking the user to choose a background color */}
-        <Text style={styles.chooseBgText}>Choose background color:</Text>
-
-        {/* View to hold color options */}
-        <View style={styles.colorOptions}>
-          {/* Loop through the colors array to create clickable color circles */}
-          {colors.map((color) => (
-            <TouchableOpacity
-              key={color}  // Unique key for each color option
-              style={[styles.colorCircle, { backgroundColor: color }]}  // Circle style with dynamic background color
-              onPress={() => setBgColor(color)}  // Set the selected background color when clicked
+            {/* TextInput component for entering the user's name */}
+            <TextInput
+              style={styles.textInput}  // Styling for the input field
+              value={name}  // The state value that holds the input text
+              onChangeText={setName}  // Function to update the name state as the user types
+              placeholder="Your name"  // Placeholder text for the input field
+              placeholderTextColor="rgba(117, 112, 131, 0.5)"  // Color of the placeholder text
             />
-          ))}
-        </View>
 
-        {/* Button to start chatting, navigating to the 'Chat' screen */}
-        <TouchableOpacity
-          style={styles.chatButton}  // Style for the button
-          onPress={() => navigation.navigate('Chat', { name, bgColor })}  // Navigate to 'Chat' with name and selected color as params
-        >
-          <Text style={styles.chatButtonText}>Start Chatting</Text>
-        </TouchableOpacity>
-      </View>
+            {/* Text prompt asking the user to choose a background color */}
+            <Text style={styles.chooseBgText}>Choose background color:</Text>
+
+            {/* View to hold color options */}
+            <View style={styles.colorOptions}>
+              {/* Loop through the colors array to create clickable color circles */}
+              {colors.map((color) => (
+                <TouchableOpacity
+                  key={color}  // Unique key for each color option
+                  style={[styles.colorCircle, { backgroundColor: color }]}  // Circle style with dynamic background color
+                  onPress={() => setBgColor(color)}  // Set the selected background color when clicked
+                />
+              ))}
+            </View>
+
+            {/* Button to start chatting, navigating to the 'Chat' screen */}
+            <TouchableOpacity
+              style={styles.chatButton}  // Style for the button
+              onPress={() => navigation.navigate('Chat', { name, bgColor })}  // Navigate to 'Chat' with name and selected color as params
+            >
+              <Text style={styles.chatButtonText}>Start Chatting</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
     </ImageBackground>
   );
 };
@@ -65,8 +72,12 @@ const styles = StyleSheet.create({
     flex: 1,
     resizeMode: 'cover',
   },
-  // Container that holds the main content and adjusts based on the background color
+  // Main container that holds the main content
   container: {
+    flex: 1,
+  },
+  // Inner container for proper layout inside KeyboardAvoidingView
+  innerContainer: {
     flex: 1,
     justifyContent: 'center',  // Center the content vertically
     alignItems: 'center',  // Center the content horizontally

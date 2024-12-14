@@ -1,4 +1,7 @@
+require('web-streams-polyfill');
 import { registerRootComponent } from 'expo';
+import 'whatwg-fetch'; // Polyfill for the fetch API
+
 
 import App from './App';
 

@@ -1,39 +1,97 @@
-import { useEffect } from 'react';  // Importing useEffect hook for side effects
-import { StyleSheet, View, Text } from 'react-native';  // Importing necessary components from React Native
+import { useEffect, useState } from 'react';  
+import { StyleSheet, View, Text, TouchableWithoutFeedback, Keyboard, Platform } from 'react-native';  
+import { Bubble, GiftedChat } from 'react-native-gifted-chat';
 
 const Chat = ({ route, navigation }) => {
-  // Destructuring to extract 'name' and 'bgColor' from the route params passed from the Start screen
-  const { name, bgColor } = route.params; // Retrieve name and bgColor from route.params
+  const [messages, setMessages] = useState([]);
 
-  // useEffect hook to set the navigation title when the component mounts or when 'name' changes
+  const { name, bgColor } = route.params;
+
   useEffect(() => {
-    navigation.setOptions({ title: name }); // Set the navigation title dynamically based on the 'name' prop
-  }, [name, navigation]);  // Dependency array ensures the effect runs when 'name' or 'navigation' changes
+    navigation.setOptions({ title: name || "Chat" });
+
+    setMessages([
+      {
+        _id: 1,
+        text: "Hello developer",
+        createdAt: new Date(),
+        user: {
+          _id: 2,
+          name: "React Native",
+          avatar: "https://placeimg.com/140/140/any",
+        },
+      },
+      {
+        _id: 2,
+        text: "You've entered the chat!",
+        createdAt: new Date(),
+        system: true,
+      },
+    ]);
+  }, [name, navigation]);
+
+  const onSend = (newMessages) => {
+    setMessages(previousMessages => GiftedChat.append(previousMessages, newMessages))
+  }
+
+  const renderBubble = (props) => {
+    return (
+      <Bubble
+        {...props}
+        wrapperStyle={{
+          right: {
+            backgroundColor: "#000", // Sender's bubble
+            width: '70%', // Adjust width of sender's bubble
+          },
+          left: {
+            backgroundColor: "#FFF", // Receiver's bubble
+            width: '70%', // Adjust width of receiver's bubble
+          },
+        }}
+        textStyle={{
+          right: { color: '#FFF' }, // Text color for sender
+          left: { color: '#000' },  // Text color for receiver
+        }}
+      />
+    );
+  };
 
   return (
-    // View component to hold the chat screen content, applying dynamic background color
-    <View style={[styles.container, { backgroundColor: bgColor || '#FFFFFF' }]}>
-      {/* Text component displaying a greeting message */}
-      <Text style={styles.chatText}>Hello, {name}!</Text>
-    </View>
+    <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
+      <View style={[styles.container, { backgroundColor: bgColor || '#FFFFFF' }]}>
+        <GiftedChat
+          messages={messages}
+          renderBubble={renderBubble}
+          onSend={messages => onSend(messages)}
+          user={{
+            _id: 1
+          }}
+        />
+        {/* Text Input Area */}
+        <View style={styles.inputContainer}>
+          {/* This container holds the chat input */}
+        </View>
+      </View>
+    </TouchableWithoutFeedback>
   );
 };
 
-// Styles for the Chat screen components
 const styles = StyleSheet.create({
-  // Style for the main container of the screen, centering content both vertically and horizontally
   container: {
     flex: 1,
-    justifyContent: 'center',  // Centers content vertically
-    alignItems: 'center',  // Centers content horizontally
+    justifyContent: 'flex-end', // Align chat to bottom
   },
-  // Style for the greeting text displayed in the chat
+  inputContainer: {
+    flexDirection: 'row', // Ensure input field and send button are side by side
+    alignItems: 'center',
+    paddingBottom: 20, // Padding to place input near the bottom
+    marginBottom: Platform.OS === 'ios' ? 10 : 20, // Fine-tune position on iOS vs Android
+  },
   chatText: {
-    fontSize: 18,  // Font size for the greeting text
-    fontWeight: '400',  // Font weight for the greeting text
-    color: '#000000',  // Text color (black)
+    fontSize: 20,
+    fontWeight: '400',
+    color: '#000000',
   },
 });
 
-// Exporting the Chat component to be used in other parts of the app
 export default Chat;
