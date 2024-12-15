@@ -1,37 +1,42 @@
 import { useEffect, useState } from 'react';  
 import { StyleSheet, View, Text, TouchableWithoutFeedback, Keyboard, Platform } from 'react-native';  
 import { Bubble, GiftedChat } from 'react-native-gifted-chat';
+import { collection, addDoc, onSnapshot, query, orderBy } from "firebase/firestore";
+import { getFirestore } from "firebase/firestore"; // Ensure Firestore is initialized
 
 const Chat = ({ route, navigation }) => {
   const [messages, setMessages] = useState([]);
+  const { userID, bgColor, name } = route.params;
+  const db = getFirestore(); // Initialize Firestore
 
-  const { name, bgColor } = route.params;
-
+  // Real-time listener using onSnapshot
   useEffect(() => {
-    navigation.setOptions({ title: name || "Chat" });
+    const messagesQuery = query(collection(db, 'messages'), orderBy("createdAt", "desc"));
 
-    setMessages([
-      {
-        _id: 1,
-        text: "Hello developer",
-        createdAt: new Date(),
-        user: {
-          _id: 2,
-          name: "React Native",
-          avatar: "https://placeimg.com/140/140/any",
-        },
-      },
-      {
-        _id: 2,
-        text: "You've entered the chat!",
-        createdAt: new Date(),
-        system: true,
-      },
-    ]);
-  }, [name, navigation]);
+    // Create onSnapshot listener
+    const unsubscribe = onSnapshot(messagesQuery, (querySnapshot) => {
+      const fetchedMessages = querySnapshot.docs.map(doc => {
+        const data = doc.data();
+        // Convert Firestore Timestamp to Date object
+        return {
+          _id: doc.id,
+          text: data.text,
+          createdAt: data.createdAt.toDate(), // Convert timestamp to Date
+          user: data.user,
+        };
+      });
+
+      setMessages(fetchedMessages); // Set messages to state
+    });
+
+    // Cleanup the listener on component unmount
+    return () => unsubscribe();
+
+  }, [db]); // Only re-run if db changes (on mount and unmount)
 
   const onSend = (newMessages) => {
-    setMessages(previousMessages => GiftedChat.append(previousMessages, newMessages))
+    // Add the new message to Firestore
+    addDoc(collection(db, "messages"), newMessages[0]);
   }
 
   const renderBubble = (props) => {
@@ -64,12 +69,12 @@ const Chat = ({ route, navigation }) => {
           renderBubble={renderBubble}
           onSend={messages => onSend(messages)}
           user={{
-            _id: 1
+            _id: userID,  // Extract user ID from route params
+            name: name    // Extract name from route params
           }}
         />
-        {/* Text Input Area */}
         <View style={styles.inputContainer}>
-          {/* This container holds the chat input */}
+          {/* Chat input area */}
         </View>
       </View>
     </TouchableWithoutFeedback>
