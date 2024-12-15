@@ -70,7 +70,7 @@ const Chat = ({ route, navigation }) => {
           onSend={messages => onSend(messages)}
           user={{
             _id: userID,  // Extract user ID from route params
-            name: name    // Extract name from route params
+            name: name,    // Extract name from route params
           }}
         />
         <View style={styles.inputContainer}>
